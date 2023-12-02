@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 
 fn get_maxs(input: &str) -> (u16, u16, u16) {
     let mut colors = (0, 0, 0);
@@ -52,6 +53,17 @@ fn part_two(input: &str) -> u16 {
         max_sum_product += max_rgb.0 * max_rgb.1 * max_rgb.2;
     }
     max_sum_product
+}
+
+#[aoc(day2, part2, Rayon)]
+fn part_two_rayon(input: &str) -> u16 {
+    input
+        .par_lines()
+        .map(|line| {
+            let rgb = get_maxs(line);
+            rgb.0 * rgb.1 * rgb.2
+        })
+        .sum()
 }
 
 #[cfg(test)]
