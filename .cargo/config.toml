@@ -1,0 +1,2 @@
+[alias]
+template = "run --bin template --quiet --release -- template"
