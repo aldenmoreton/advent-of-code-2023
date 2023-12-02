@@ -1,3 +1,5 @@
+use std::{thread, sync::{Arc, Mutex}};
+
 use rayon::prelude::*;
 
 fn get_maxs(input: &str) -> (u16, u16, u16) {
@@ -55,6 +57,31 @@ fn part_two(input: &str) -> u16 {
     max_sum_product
 }
 
+#[aoc(day2, part2, Threads)]
+fn part_two_threads(input: &str) -> u16 {
+    let max_sum = Arc::new(Mutex::new(0));
+    let mut threads = Vec::new();
+
+    for line in input.lines() {
+        let line = line.to_owned();
+        let thread_max_sum = max_sum.clone();
+        threads.push(
+            thread::spawn(move || {
+                let rgb = get_maxs(&line);
+                let product = rgb.0 * rgb.1 * rgb.2;
+                let mut thread_max_sum = thread_max_sum.lock().unwrap();
+                *thread_max_sum += product;
+            })
+        )
+    }
+    threads
+        .into_iter()
+        .for_each(|handle| handle.join().unwrap());
+
+    let lock = Arc::try_unwrap(max_sum).expect("Lock still has multiple owners");
+    lock.into_inner().expect("Mutex cannot be locked")
+}
+
 #[aoc(day2, part2, Rayon)]
 fn part_two_rayon(input: &str) -> u16 {
     input
@@ -95,11 +122,4 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
         let result = part_two(input);
         assert_eq!(result, 2286);
     }
-
-    // #[test]
-    // fn part2_1() {
-    //     let input = "";
-    //     let result = part_two(&input_generator(input));
-    //     assert_eq!(result, 0);
-    // }
 }
