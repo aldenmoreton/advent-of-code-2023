@@ -1,4 +1,4 @@
-use std::{thread, sync::{Arc, Mutex}};
+use std::{thread, sync::{Arc, Mutex, mpsc::channel}};
 
 use rayon::prelude::*;
 
@@ -80,6 +80,33 @@ fn part_two_threads(input: &str) -> u16 {
 
     let lock = Arc::try_unwrap(max_sum).expect("Lock still has multiple owners");
     lock.into_inner().expect("Mutex cannot be locked")
+}
+
+#[aoc(day2, part2, Channel)]
+fn part_two_channel(input: &str) -> u16 {
+    let (send, recv) = channel();
+    let mut threads = Vec::new();
+
+    for line in input.lines() {
+        let line = line.to_owned();
+        let send_answer = send.clone();
+        threads.push(
+            thread::spawn(move || {
+                let rgb = get_maxs(&line);
+                let product = rgb.0 * rgb.1 * rgb.2;
+                send_answer.send(product).unwrap();
+            })
+        )
+    }
+
+    let mut i = 0;
+    let mut sum = 0;
+    for num in recv {
+        sum += num;
+        i += 1;
+        if i == 100 {break}
+    }
+    sum
 }
 
 #[aoc(day2, part2, Rayon)]
