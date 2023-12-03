@@ -11,7 +11,7 @@ fn input_generator(input: &str) -> String {
 }
 
 #[aoc(day{}, part1)]
-fn part_one(_input: &str) -> i32 {
+fn part_one(input: &str) -> i32 {
     0
 }
 
