@@ -111,14 +111,12 @@ fn part_two(input: &str) -> u32 {
             }
         }
     }
-    println!("Numbers: {:?}", potential_parts);
 
     let mut gear_total = 0;
     let mut adjacent_nums = Vec::new();
     let mut i;
     let mut j ;
     for (star_i, star_j) in stars {
-        println!("Star: {},{}", star_i, star_j);
         i = if star_i > 0 {
             star_i - 1
         } else {
@@ -131,9 +129,7 @@ fn part_two(input: &str) -> u32 {
                 0
             };
             while j <= star_j + 1 {
-                println!("\tChecking: {},{}", i, j);
                 if let Some((number, (_, last_index))) = potential_parts.get(&(i, j)) {
-                    println!("\t\tFound number: {}", number);
                     adjacent_nums.push(number.clone());
                     j = *last_index
                 }
@@ -142,14 +138,12 @@ fn part_two(input: &str) -> u32 {
             i += 1
         }
         if adjacent_nums.len() == 2 {
-            println!("We have some gears: {:?}", adjacent_nums);
             gear_total += adjacent_nums
                 .iter()
                 .map(|number| number.parse::<u32>().unwrap())
                 .product::<u32>();
         }
         adjacent_nums.clear();
-        println!("-------")
     }
 
     gear_total
