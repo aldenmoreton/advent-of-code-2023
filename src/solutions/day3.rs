@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 #[aoc(day3, part1)]
 fn part_one(input: &str) -> u32 {
@@ -29,7 +29,6 @@ fn part_one(input: &str) -> u32 {
                     symbols.insert((i, j));
                     if new_number.len() > 0 {
                         let number_string: String = new_number.iter().collect();
-                        println!("{number_string}");
                         let first_index = j - number_string.len();
                         potential_parts.push((number_string, (i, (first_index, j - 1))));
                         new_number.clear();
@@ -38,8 +37,6 @@ fn part_one(input: &str) -> u32 {
             }
         }
     }
-    println!("Potentials: {:?}", potential_parts);
-    println!("Len: {:?}", potential_parts.len());
 
     let mut part_total = 0;
     for (part_number, (number_i, (number_first_j, number_last_j))) in potential_parts {
@@ -56,27 +53,106 @@ fn part_one(input: &str) -> u32 {
                 0
             };
             let last_j = number_last_j + 1;
-            println!("Checking number {part_number}");
-            println!("Checking between ({},{})-({},{})", first_i, first_j, last_i, last_j);
             for j in first_j..=last_j {
-                println!("Checking: {i},{j}");
                 if symbols.contains(&(i, j)) {
-                    println!("Add this number: {part_number}");
-                    println!("Because of this: {},{}", i, j);
                     part_total += part_number.parse::<u32>().unwrap();
                     break 'number_check
                 }
             }
         }
-        println!("-----");
     }
 
     part_total
 }
 
 #[aoc(day3, part2)]
-fn part_two(_input: &str) -> i32 {
-    0
+fn part_two(input: &str) -> u32 {
+    let mut potential_parts = HashMap::new();
+    let mut stars = Vec::new();
+    let mut new_number = Vec::new();
+    for (i, line) in input.lines().enumerate() {
+        for (j, curr_char) in line.chars().enumerate() {
+            match curr_char {
+                '*' => {
+                    stars.push((i, j));
+                    if new_number.len() > 0 {
+                        let number_string: String = new_number.iter().collect();
+                        let first_index = j - number_string.len();
+                        let last_index = j - 1;
+                        for insert_j in first_index..=last_index {
+                            potential_parts.insert((i, insert_j), (number_string.clone(), (first_index, last_index)));
+                        }
+                        new_number.clear();
+                    }
+                },
+                curr_char if curr_char.is_numeric() => {
+                    new_number.push(curr_char);
+                    if j == line.len() - 1 {
+                        let number_string: String = new_number.iter().collect();
+                        let first_index = j - number_string.len() + 1;
+                        let last_index = j;
+                        for insert_j in first_index..=last_index {
+                            potential_parts.insert((i, insert_j), (number_string.clone(), (first_index, last_index)));
+                        }
+                        new_number.clear();
+                    }
+                },
+                _ => {
+                    if new_number.len() > 0 {
+                        let number_string: String = new_number.iter().collect();
+                        let first_index = j - number_string.len();
+                        let last_index = j - 1;
+                        for insert_j in first_index..=last_index {
+                            potential_parts.insert((i, insert_j), (number_string.clone(), (first_index, last_index)));
+                        }
+                        new_number.clear();
+                    }
+                }
+            }
+        }
+    }
+    println!("Numbers: {:?}", potential_parts);
+
+    let mut gear_total = 0;
+    let mut adjacent_nums = Vec::new();
+    let mut i;
+    let mut j ;
+    for (star_i, star_j) in stars {
+        println!("Star: {},{}", star_i, star_j);
+        i = if star_i > 0 {
+            star_i - 1
+        } else {
+            0
+        };
+        while i <= star_i + 1 {
+            j = if star_j > 0 {
+                star_j - 1
+            } else {
+                0
+            };
+            while j <= star_j + 1 {
+                println!("\tChecking: {},{}", i, j);
+                if let Some((number, (_, last_index))) = potential_parts.get(&(i, j)) {
+                    println!("\t\tFound number: {}", number);
+                    adjacent_nums.push(number.clone());
+                    j = *last_index
+                }
+                j += 1
+            }
+            i += 1
+        }
+        if adjacent_nums.len() == 2 {
+            println!("We have some gears: {:?}", adjacent_nums);
+            gear_total += adjacent_nums
+                .iter()
+                .map(|number| number.parse::<u32>().unwrap())
+                .product::<u32>();
+        }
+        adjacent_nums.clear();
+        println!("-------")
+    }
+
+    gear_total
 }
 
 #[cfg(test)]
@@ -124,8 +200,19 @@ mod tests {
 
     #[test]
     fn part2_1() {
-        let input = "";
+        let input =
+"467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+";
         let result = part_two(input);
-        assert_eq!(result, 0);
+        assert_eq!(result, 467835);
     }
 }
