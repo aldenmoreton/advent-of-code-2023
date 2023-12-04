@@ -80,7 +80,7 @@ fn part_two(input: &str) -> u32 {
                         let first_index = j - number_string.len();
                         let last_index = j - 1;
                         for insert_j in first_index..=last_index {
-                            potential_parts.insert((i, insert_j), (number_string.clone(), (first_index, last_index)));
+                            potential_parts.insert((i, insert_j), (number_string.clone(), last_index));
                         }
                         new_number.clear();
                     }
@@ -92,7 +92,7 @@ fn part_two(input: &str) -> u32 {
                         let first_index = j - number_string.len() + 1;
                         let last_index = j;
                         for insert_j in first_index..=last_index {
-                            potential_parts.insert((i, insert_j), (number_string.clone(), (first_index, last_index)));
+                            potential_parts.insert((i, insert_j), (number_string.clone(), last_index));
                         }
                         new_number.clear();
                     }
@@ -103,7 +103,7 @@ fn part_two(input: &str) -> u32 {
                         let first_index = j - number_string.len();
                         let last_index = j - 1;
                         for insert_j in first_index..=last_index {
-                            potential_parts.insert((i, insert_j), (number_string.clone(), (first_index, last_index)));
+                            potential_parts.insert((i, insert_j), (number_string.clone(), last_index));
                         }
                         new_number.clear();
                     }
@@ -129,7 +129,7 @@ fn part_two(input: &str) -> u32 {
                 0
             };
             while j <= star_j + 1 {
-                if let Some((number, (_, last_index))) = potential_parts.get(&(i, j)) {
+                if let Some((number, last_index)) = potential_parts.get(&(i, j)) {
                     adjacent_nums.push(number.clone());
                     j = *last_index
                 }
