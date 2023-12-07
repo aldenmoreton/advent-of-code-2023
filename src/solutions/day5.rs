@@ -89,43 +89,8 @@ fn part_one_rayon(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
         .unwrap()
 }
 
-
 #[aoc(day5, part2)]
 fn part_two(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
-    let id_ranges: Vec<(u64, u64)> = input.0
-        .clone()
-        .into_iter()
-        .tuples()
-        .collect();
-
-    let mappings = &input.1;
-
-    let mut min_id = u64::MAX;
-    for (min_id_range, range_len) in id_ranges {
-        for mut id in min_id_range..min_id_range+range_len {
-            // print!("{} -> ", id);
-            for mapping in mappings.iter() {
-                for ((value_start, key_start), map_len) in mapping {
-                    if *key_start <= id && id < key_start + map_len {
-                        // print!("*");
-                        let key_offset = id - key_start;
-                        id = value_start + key_offset;
-                        break
-                    }
-                }
-                // print!("{} -> ", id);
-            }
-            // println!("{}", id);
-            if id < min_id { min_id = id }
-        }
-    }
-
-    min_id
-}
-
-
-#[aoc(day5, part2, Rayon)]
-fn part_two_rayon(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
     let id_ranges: Vec<(u64, u64)> = input.0
         .clone()
         .into_iter()
@@ -165,70 +130,96 @@ fn split_ranges(
     let key_end = key_start + mapping_len - 1;
     if curr_start < key_start {
         if curr_end < key_end {
-            if curr_end < key_end
-                { return (None, Some((curr_start, curr_len)), None) }
-            // Case 1
-            println!("Case 1: {}-{}", curr_start, curr_end);
-            let left_len = key_start - curr_start;
-            range_splitting.push_back((curr_start, left_len));
-            next_ranges.push((*value_start, 1 + curr_end - key_start));
-            continue 'curr_range
+            if curr_end < key_start {
+                // println!("No overlap");
+                (None, Some((curr_start, curr_len)), None)
+            } else {
+                // Case 1
+                // println!("Case 1: {}-{}", curr_start, curr_end);
+                let left_len = key_start - curr_start;
+                (
+                    Some((value_start, 1 + curr_end - key_start)),
+                    Some((curr_start, left_len)),
+                    None
+                )
+            }
         } else if curr_end > key_end {
             // Case 2
-            println!("Case 2: {}-{}", curr_start, curr_end);
+            // println!("Case 2: {}-{}", curr_start, curr_end);
             let left_len = key_start - curr_start;
             let right_len = curr_end - key_end;
-            range_splitting.push_back((curr_start, left_len));
-            range_splitting.push_back((key_end+1, right_len));
-            next_ranges.push((*value_start, *mapping_len));
-            continue 'curr_range
+            (
+                Some((value_start, mapping_len)),
+                Some((curr_start, left_len)),
+                Some((key_end+1, right_len))
+            )
         } else {
             // Case 3
-            println!("Case 3: {}-{}", curr_start, curr_end);
+            // println!("Case 3: {}-{}", curr_start, curr_end);
             let left_len = key_start - curr_start;
-            range_splitting.push_back((curr_start, left_len));
-            next_ranges.push((*value_start, *mapping_len));
-            continue 'curr_range
+            (
+                Some((value_start, mapping_len)),
+                Some((curr_start, left_len)),
+                None
+            )
         }
-    } else if curr_start > *key_start {
+    } else if curr_start > key_start {
         if curr_end < key_end {
             // Case 4
-            println!("Case 4: {}-{}", curr_start, curr_end);
-            next_ranges.push((*value_start+(curr_start-key_start), curr_len));
-            continue 'curr_range
+            // println!("Case 4: {}-{}", curr_start, curr_end);
+            (
+                Some((value_start + (curr_start - key_start), curr_len)),
+                None,
+                None
+            )
         } else if curr_end > key_end {
-            if curr_end > key_end
-                { return (None, Some((curr_start, curr_len)), None) }
+            if curr_start > key_end {
+                // println!("No overlap");
+                return (None, Some((curr_start, curr_len)), None)
+            }
             // Case 5
-            println!("Case 5: {}-{}", curr_start, curr_end);
+            // println!("Case 5: {}-{}", curr_start, curr_end);
             let right_len = curr_end - key_end;
-            range_splitting.push_back((key_end+1, right_len));
-            next_ranges.push((*value_start + (curr_start - key_start), curr_len - right_len));
-            continue 'curr_range
+            (
+                Some((value_start + (curr_start - key_start), curr_len - right_len)),
+                Some((key_end + 1, right_len)),
+                None
+            )
         } else {
             // Case 6
-            println!("Case 6: {}-{}", curr_start, curr_end);
-            next_ranges.push((*value_start + (curr_start - key_start), curr_len));
-            continue 'curr_range
+            // println!("Case 6: {}-{}", curr_start, curr_end);
+            (
+                Some((value_start + (curr_start - key_start), curr_len)),
+                None,
+                None
+            )
         }
     } else {
         if curr_end < key_end {
             // Case 7
-            println!("Case 7: {}-{}", curr_start, curr_end);
-            next_ranges.push((*value_start, 1 + key_end-curr_end));
-            continue 'curr_range
+            // println!("Case 7: {}-{}", curr_start, curr_end);
+            (
+                Some((value_start, curr_len)),
+                None,
+                None
+            )
         } else if curr_end > key_end {
             // Case 8
-            println!("Case 8: {}-{}", curr_start, curr_end);
+            // println!("Case 8: {}-{}", curr_start, curr_end);
             let right_len = curr_end - key_end;
-            range_splitting.push_back((key_end+1, right_len));
-            next_ranges.push((*value_start, curr_len - right_len));
-            continue 'curr_range
+            (
+                Some((value_start, curr_len - right_len)),
+                Some((key_end + 1, right_len)),
+                None
+            )
         } else {
             // Case 9
-            println!("Case 9: {}-{}", curr_start, curr_end);
-            next_ranges.push((*value_start, *mapping_len));
-            continue 'curr_range
+            // println!("Case 9: {}-{}", curr_start, curr_end);
+            (
+                Some((value_start, mapping_len)),
+                None,
+                None
+            )
         }
     }
 }
@@ -364,7 +355,7 @@ mod tests {
             60 56 37
             56 93 4
         "};
-        let result = part_two(&input_generator(input));
+        let result = part_two_optimized(&input_generator(input));
         assert_eq!(result, 46);
     }
 }
