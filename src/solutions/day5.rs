@@ -7,16 +7,13 @@ use rayon::prelude::*;
 fn input_generator(input: &str) -> (Vec<u64>, Vec<Vec<((u64, u64), u64)>>) {
     let mut lines = input.lines().peekable();
 
-
     let (_, seeds) = lines.next().unwrap().split_once(": ").unwrap();
     let source_values: Vec<u64> = seeds
         .split_whitespace()
         .map(|number| number.parse::<u64>().unwrap())
         .collect();
 
-
     lines.next(); lines.next();
-
 
     let mut value_mappings: Vec<Vec<((u64, u64), u64)>> = Vec::new();
     let mut curr_map = Vec::new();
@@ -37,6 +34,7 @@ fn input_generator(input: &str) -> (Vec<u64>, Vec<Vec<((u64, u64), u64)>>) {
                 amounts.next().unwrap().parse::<u64>().unwrap()
             ))
     }
+
     (source_values, value_mappings)
 }
 
@@ -45,7 +43,6 @@ fn input_generator(input: &str) -> (Vec<u64>, Vec<Vec<((u64, u64), u64)>>) {
 fn part_one(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
     let mut ids = input.0.clone();
     let mappings = &input.1;
-
 
     let mut min_id = u64::MAX;
     for id in ids.iter_mut() {
@@ -65,7 +62,6 @@ fn part_one(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
         if *id < min_id { min_id = *id }
     }
 
-
     min_id
 }
 
@@ -74,7 +70,6 @@ fn part_one(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
 fn part_one_rayon(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
     let ids = input.0.clone();
     let mappings = &input.1;
-
 
     ids
         .into_par_iter()
@@ -103,9 +98,7 @@ fn part_two(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
         .tuples()
         .collect();
 
-
     let mappings = &input.1;
-
 
     let mut min_id = u64::MAX;
     for (min_id_range, range_len) in id_ranges {
@@ -126,7 +119,6 @@ fn part_two(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
             if id < min_id { min_id = id }
         }
     }
-
 
     min_id
 }
@@ -165,145 +157,147 @@ fn part_two_rayon(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
         .unwrap()
 }
 
-// #[aoc(day5, part2, Optimized)]
-// fn part_two_optimized(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
-//     let id_ranges: Vec<(u64, u64)> = input.0
-//         .clone()
-//         .into_iter()
-//         .tuples()
-//         .collect();
-//     let mappings = &input.1;
+fn split_ranges(
+    (curr_start, curr_len): (u64, u64),
+    ((value_start, key_start), mapping_len): ((u64, u64), u64)
+) -> (Option<(u64, u64)>, Option<(u64, u64)>, Option<(u64, u64)>) {
+    let curr_end = curr_start + curr_len - 1;
+    let key_end = key_start + mapping_len - 1;
+    if curr_start < key_start {
+        if curr_end < key_end {
+            if curr_end < key_end
+                { return (None, Some((curr_start, curr_len)), None) }
+            // Case 1
+            println!("Case 1: {}-{}", curr_start, curr_end);
+            let left_len = key_start - curr_start;
+            range_splitting.push_back((curr_start, left_len));
+            next_ranges.push((*value_start, 1 + curr_end - key_start));
+            continue 'curr_range
+        } else if curr_end > key_end {
+            // Case 2
+            println!("Case 2: {}-{}", curr_start, curr_end);
+            let left_len = key_start - curr_start;
+            let right_len = curr_end - key_end;
+            range_splitting.push_back((curr_start, left_len));
+            range_splitting.push_back((key_end+1, right_len));
+            next_ranges.push((*value_start, *mapping_len));
+            continue 'curr_range
+        } else {
+            // Case 3
+            println!("Case 3: {}-{}", curr_start, curr_end);
+            let left_len = key_start - curr_start;
+            range_splitting.push_back((curr_start, left_len));
+            next_ranges.push((*value_start, *mapping_len));
+            continue 'curr_range
+        }
+    } else if curr_start > *key_start {
+        if curr_end < key_end {
+            // Case 4
+            println!("Case 4: {}-{}", curr_start, curr_end);
+            next_ranges.push((*value_start+(curr_start-key_start), curr_len));
+            continue 'curr_range
+        } else if curr_end > key_end {
+            if curr_end > key_end
+                { return (None, Some((curr_start, curr_len)), None) }
+            // Case 5
+            println!("Case 5: {}-{}", curr_start, curr_end);
+            let right_len = curr_end - key_end;
+            range_splitting.push_back((key_end+1, right_len));
+            next_ranges.push((*value_start + (curr_start - key_start), curr_len - right_len));
+            continue 'curr_range
+        } else {
+            // Case 6
+            println!("Case 6: {}-{}", curr_start, curr_end);
+            next_ranges.push((*value_start + (curr_start - key_start), curr_len));
+            continue 'curr_range
+        }
+    } else {
+        if curr_end < key_end {
+            // Case 7
+            println!("Case 7: {}-{}", curr_start, curr_end);
+            next_ranges.push((*value_start, 1 + key_end-curr_end));
+            continue 'curr_range
+        } else if curr_end > key_end {
+            // Case 8
+            println!("Case 8: {}-{}", curr_start, curr_end);
+            let right_len = curr_end - key_end;
+            range_splitting.push_back((key_end+1, right_len));
+            next_ranges.push((*value_start, curr_len - right_len));
+            continue 'curr_range
+        } else {
+            // Case 9
+            println!("Case 9: {}-{}", curr_start, curr_end);
+            next_ranges.push((*value_start, *mapping_len));
+            continue 'curr_range
+        }
+    }
+}
 
+#[aoc(day5, part2, Optimized)]
+fn part_two_optimized(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
+    let id_ranges: Vec<(u64, u64)> = input.0
+        .clone()
+        .into_iter()
+        .tuples()
+        .collect();
+    let mappings = &input.1;
 
-//     let mut next_ranges = Vec::new();
-//     for original_curr_range in curr_ranges {
-//         // print!("{} -> ", source_value);
-//         let mut range_splitting = VecDeque::new();
-//         range_splitting.push_back(original_curr_range);
-//         'curr_range: while !range_splitting.is_empty() {
-//             let (curr_start, curr_len) = range_splitting.pop_front().unwrap();
-//             let curr_end = curr_start + curr_len - 1;
-//             for ((value_start, key_start), mapping_len) in mappings.iter() {
-//                 let key_end = key_start + mapping_len - 1;
-//                 if curr_start < *key_start {
-//                     if curr_end < key_end {
-//                         if curr_end < key_end { continue }
-//                         // Case 1
-//                         println!("Case 1: {}-{}", curr_start, curr_end);
-//                         let left_len = key_start - curr_start;
-//                         range_splitting.push_back((curr_start, left_len));
-//                         next_ranges.push((*value_start, 1 + curr_end - key_start));
-//                         continue 'curr_range
-//                     } else if curr_end > key_end {
-//                         // Case 2
-//                         println!("Case 2: {}-{}", curr_start, curr_end);
-//                         let left_len = key_start - curr_start;
-//                         let right_len = curr_end - key_end;
-//                         range_splitting.push_back((curr_start, left_len));
-//                         range_splitting.push_back((key_end+1, right_len));
-//                         next_ranges.push((*value_start, *mapping_len));
-//                         continue 'curr_range
-//                     } else {
-//                         // Case 3
-//                         println!("Case 3: {}-{}", curr_start, curr_end);
-//                         let left_len = key_start - curr_start;
-//                         range_splitting.push_back((curr_start, left_len));
-//                         next_ranges.push((*value_start, *mapping_len));
-//                         continue 'curr_range
-//                     }
-//                 } else if curr_start > *key_start {
-//                     if curr_end < key_end {
-//                         // Case 4
-//                         println!("Case 4: {}-{}", curr_start, curr_end);
-//                         next_ranges.push((*value_start+(curr_start-key_start), curr_len));
-//                         continue 'curr_range
-//                     } else if curr_end > key_end {
-//                         if curr_end > key_end { continue }
-//                         // Case 5
-//                         println!("Case 5: {}-{}", curr_start, curr_end);
-//                         let right_len = curr_end - key_end;
-//                         range_splitting.push_back((key_end+1, right_len));
-//                         next_ranges.push((*value_start + (curr_start - key_start), curr_len - right_len));
-//                         continue 'curr_range
-//                     } else {
-//                         // Case 6
-//                         println!("Case 6: {}-{}", curr_start, curr_end);
-//                         next_ranges.push((*value_start + (curr_start - key_start), curr_len));
-//                         continue 'curr_range
-//                     }
-//                 } else {
-//                     if curr_end < key_end {
-//                         // Case 7
-//                         println!("Case 7: {}-{}", curr_start, curr_end);
-//                         next_ranges.push((*value_start, 1 + key_end-curr_end));
-//                         continue 'curr_range
-//                     } else if curr_end > key_end {
-//                         // Case 8
-//                         println!("Case 8: {}-{}", curr_start, curr_end);
-//                         let right_len = curr_end - key_end;
-//                         range_splitting.push_back((key_end+1, right_len));
-//                         next_ranges.push((*value_start, curr_len - right_len));
-//                         continue 'curr_range
-//                     } else {
-//                         // Case 9
-//                         println!("Case 9: {}-{}", curr_start, curr_end);
-//                         next_ranges.push((*value_start, *mapping_len));
-//                         continue 'curr_range
-//                     }
-//                 }
-//             }
-//             next_ranges.push((curr_start, curr_len))
-//         }
-//         // println!("{}", source_value);
-//     }
-//     // println!("-----------");
-//     mappings.clear();
-//     curr_ranges = next_ranges;
-//     lines.next();
-//     println!("--------");
-//     continue
+    let mut total_min = u64::MAX;
+    for id_range in id_ranges {
+        let mut curr_ranges = VecDeque::new();
+        curr_ranges.push_back(id_range);
 
-//         let mut amounts = line.split_whitespace();
-//         mappings
-//             .push((
-//                 (
-//                     amounts.next().unwrap().parse::<u64>().unwrap(),
-//                     amounts.next().unwrap().parse::<u64>().unwrap()
-//                 ),
-//                 amounts.next().unwrap().parse::<u64>().unwrap()
-//             ))
+        for mapping in mappings {
+            let mut next_ranges = VecDeque::new();
+            'range_splitting: while let Some(mut curr_range) = curr_ranges.pop_front() {
+                for map in mapping {
+                    let (next_range, new_curr, new_leftover) = split_ranges(curr_range, *map);
+                    if let Some(range) = next_range {
+                        next_ranges.push_back(range)
+                    }
+                    if let Some(leftover) = new_curr {
+                        curr_range = leftover
+                    } else {
+                        continue 'range_splitting
+                    }
+                    if let Some(leftover) = new_leftover {
+                        curr_ranges.push_back(leftover)
+                    }
+                }
+                next_ranges.push_back(curr_range)
+            }
+            curr_ranges = next_ranges;
+        }
 
-//     println!("{:?}", curr_ranges);
-//     println!("{:?}", curr_ranges.len());
-//     curr_ranges
-//         .into_iter()
-//         .map(|(first_index, _)| first_index)
-//         .min()
-//         .unwrap()
-// }
+        let curr_min = curr_ranges
+            .into_iter()
+            .map(|(start_value, _)| start_value)
+            .min()
+            .unwrap();
+        if curr_min < total_min { total_min = curr_min }
+    }
+
+    total_min
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use indoc::indoc;
 
-
     #[test]
     fn part1_1() {
         let input = indoc!{"
             seeds: 79 14 55 13
 
-
             seed-to-soil map:
             50 98 2
             52 50 48
-
 
             soil-to-fertilizer map:
             0 15 37
             37 52 2
             39 0 15
-
 
             fertilizer-to-water map:
             49 53 8
@@ -311,22 +305,18 @@ mod tests {
             42 0 7
             57 7 4
 
-
             water-to-light map:
             88 18 7
             18 25 70
-
 
             light-to-temperature map:
             45 77 23
             81 45 19
             68 64 13
 
-
             temperature-to-humidity map:
             0 69 1
             1 0 69
-
 
             humidity-to-location map:
             60 56 37
@@ -342,17 +332,14 @@ mod tests {
         let input = indoc!{"
             seeds: 79 14 55 13
 
-
             seed-to-soil map:
             50 98 2
             52 50 48
-
 
             soil-to-fertilizer map:
             0 15 37
             37 52 2
             39 0 15
-
 
             fertilizer-to-water map:
             49 53 8
@@ -360,22 +347,18 @@ mod tests {
             42 0 7
             57 7 4
 
-
             water-to-light map:
             88 18 7
             18 25 70
-
 
             light-to-temperature map:
             45 77 23
             81 45 19
             68 64 13
 
-
             temperature-to-humidity map:
             0 69 1
             1 0 69
-
 
             humidity-to-location map:
             60 56 37
