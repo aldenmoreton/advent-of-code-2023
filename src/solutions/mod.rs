@@ -35,3 +35,13 @@ pub mod day5;
 /// my head I realized that this would be a porabola where the descrete
 /// points above the previous race record would be the winning options.
 pub mod day6;
+/// [Camel Cards](https://adventofcode.com/2023/day/7)
+/// ## Summary
+/// This day was a parsing puzzle. Once Card hands were parsed into
+/// their correct form, they could be sorted with the derived implementations
+/// of order.
+/// ## Reflection
+/// This was one of the problems where using structs absolutely made sense.
+/// The ability to derive all of the ordering and comparision needed made this
+/// one of the quickiest days to solve.
+mod day7;
