@@ -31,56 +31,65 @@ fn input_generator(input: &str) -> (String, HashMap<String, (String, String)>) {
 }
 
 #[aoc(day8, part1)]
-fn part_one(input: &(String, HashMap<String, (String, String)>)) -> usize {
-    input.0
+fn part_one(
+    (
+        directions,
+        mappings
+    ): &(String, HashMap<String, (String, String)>)
+) -> usize {
+    directions
         .chars()
         .cycle()
-        .enumerate()
-        .fold_while(("AAA", 0), |curr_location, direction| {
-            let next_location = if direction.1 == 'L' {
-                &input.1.get(curr_location.0).unwrap().0
-            } else if direction.1 == 'R' {
-                &input.1.get(curr_location.0).unwrap().1
+        .fold_while(("AAA", 0), |(curr_location, count), direction| {
+            let next_location = if direction == 'L' {
+                &mappings.get(curr_location).unwrap().0
+            } else if direction == 'R' {
+                &mappings.get(curr_location).unwrap().1
             } else {
-                panic!("This isn't a direction")
+                unreachable!()
             };
             if next_location == "ZZZ" {
-                FoldWhile::Done(("", direction.0 + 1))
+                FoldWhile::Done(("", count + 1))
             } else {
-                FoldWhile::Continue((next_location, 0))
+                FoldWhile::Continue((next_location, count + 1))
             }
         })
-        .into_inner().1
+        .into_inner()
+        .1
 }
 
 #[aoc(day8, part2)]
-fn part_two(input: &(String, HashMap<String, (String, String)>)) -> u64 {
-    let paths: Vec<_> = input.1
+fn part_two(
+    (
+        directions,
+        mappings): &(String, HashMap<String, (String, String)>
+    )
+) -> u64 {
+    mappings
         .keys()
         .filter(|node| node.ends_with('A'))
-        .collect();
-
-    paths
+        .collect_vec()
         .into_par_iter()
-        .map(|node| {
-            let (_, count) = input.0
+        .map(|starting_point| {
+            directions
                 .chars()
                 .cycle()
-                .fold_while((node, 0u64), |(src, count), dir| {
-                    let (left, right) = input.1.get(src).unwrap();
-                    let dst = match dir {
-                        'L' => left,
-                        'R' => right,
-                        _ => unreachable!(),
-                    };
-                    if !dst.ends_with('Z') {
-                        FoldWhile::Continue((&dst, count + 1))
+                .fold_while((starting_point, 0u64), |(curr_location, count), direction| {
+                    let next_location = if direction == 'L' {
+                        &mappings.get(curr_location).unwrap().0
+                    } else if direction == 'R' {
+                        &mappings.get(curr_location).unwrap().1
                     } else {
-                        FoldWhile::Done((&dst, count + 1))
+                        unreachable!()
+                    };
+                    if !next_location.ends_with('Z') {
+                        FoldWhile::Continue((&next_location, count + 1))
+                    } else {
+                        FoldWhile::Done((&next_location, count + 1))
                     }
                 })
-                .into_inner();
-            count
+                .into_inner()
+                .1
         })
         .reduce(|| 1u64, |a, b| lcm(a, b))
 }
@@ -107,7 +116,6 @@ mod tests {
         assert_eq!(result, 2);
     }
 
-
     #[test]
     fn part1_2() {
         let input = indoc! {"
@@ -120,7 +128,6 @@ mod tests {
         let result = part_one(&input_generator(input));
         assert_eq!(result, 6);
     }
-
 
     #[test]
     fn part2_1() {
