@@ -45,3 +45,13 @@ pub mod day6;
 /// The ability to derive all of the ordering and comparision needed made this
 /// one of the quickiest days to solve.
 mod day7;
+/// [Haunted Wasteland](https://adventofcode.com/2023/day/8)
+/// ## Summary
+/// Great mapping problem for part one extended into the same mapping
+/// problem with the addition of some LCM math for part 2.
+/// ## Reflection
+/// This problem is a shining example of the power of parrellel iterators.
+/// Part 2 is able to have almost the same runtime characteristics as part 1
+/// because it is the part 1 problem done in parrellel and then given a small
+/// calculation to fold all values.
+mod day8;
