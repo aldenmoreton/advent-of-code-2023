@@ -55,10 +55,12 @@ mod day7;
 /// because it is the part 1 problem done in parrellel and then given a small
 /// calculation to fold all values.
 mod day8;
-/// [Mirage Maintenance(https://adventofcode.com/2023/day/9)
+/// [Mirage Maintenance](https://adventofcode.com/2023/day/9)
 /// ## Summary
 /// This day could be solved using iterators and folding.
 /// ## Reflection
 /// This was a very easy day, but was great practice for
 /// using the fold method on iterators.
 mod day9;
+/// [Pipe Maze](https://adventofcode.com/2023/day/10)
+mod day10;
