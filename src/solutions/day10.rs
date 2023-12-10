@@ -1,4 +1,3 @@
-use rayon::prelude::*;
 
 #[derive(PartialEq)]
 enum Pipe {
@@ -159,43 +158,78 @@ fn get_next_direction(prev_direction: &Direction, curr_pipe: &Pipe) -> Direction
 #[aoc(day10, part1)]
 fn part_one((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
     let (x_len, y_len) = (map.len(), map[0].len());
-    let length = vec![
+    let cardnal_directions = vec![
         Direction::Up,
         Direction::Down,
         Direction::Left,
-    ]
-        .into_par_iter()
-        .map(|mut curr_direction| {
-            let (mut curr_x, mut curr_y) = start.clone();
-            let mut count = 0;
-            loop {
-                (curr_x, curr_y) = if let Some((x, y)) = get_next_index(&curr_direction, curr_x, curr_y, x_len, y_len) {
-                    (x, y)
-                } else {
-                    count = 0;
-                    break
-                };
-                let next_options = get_next_options(&curr_direction);
-                let curr_pipe = &map[curr_x][curr_y];
-                if !next_options.contains(&curr_pipe) {
-                    count = 0;
-                    break
-                }
-                count += 1;
-                if curr_pipe == &Pipe::Start { break }
-                curr_direction = get_next_direction(&curr_direction, curr_pipe);
+    ];
+    for mut curr_direction in cardnal_directions {
+        let (mut curr_x, mut curr_y) = start.clone();
+        let mut count = 0;
+        loop {
+            (curr_x, curr_y) = if let Some((x, y)) = get_next_index(&curr_direction, curr_x, curr_y, x_len, y_len) {
+                (x, y)
+            } else {
+                count = 0;
+                break
+            };
+            let next_options = get_next_options(&curr_direction);
+            let curr_pipe = &map[curr_x][curr_y];
+            if !next_options.contains(&curr_pipe) {
+                count = 0;
+                break
             }
-            count
-        })
-        .max()
-        .unwrap();
+            count += 1;
+            if curr_pipe == &Pipe::Start { break }
+            curr_direction = get_next_direction(&curr_direction, curr_pipe);
+        }
+        if count > 0 {
+            return count / 2
+        }
+    }
 
-    length / 2
+    panic!("Should have found a solution")
 }
 
 #[aoc(day10, part2)]
-fn part_two((_start, _map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
-    0
+fn part_two((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
+    let (x_len, y_len) = (map.len(), map[0].len());
+    let cardnal_directions = vec![
+        Direction::Up,
+        Direction::Down,
+        Direction::Left,
+    ];
+
+    let mut pipe_map = (0..x_len)
+        .map(|_| Vec::<Pipe>::with_capacity(y_len))
+        .collect::<Vec<_>>();
+    for mut curr_direction in cardnal_directions {
+        let (mut curr_x, mut curr_y) = start.clone();
+        let mut count = 0;
+        loop {
+            (curr_x, curr_y) = if let Some((x, y)) = get_next_index(&curr_direction, curr_x, curr_y, x_len, y_len) {
+                (x, y)
+            } else {
+                count = 0;
+                break
+            };
+            let next_options = get_next_options(&curr_direction);
+            let curr_pipe = &map[curr_x][curr_y];
+            if !next_options.contains(&curr_pipe) {
+                count = 0;
+                break
+            }
+            count += 1;
+            if curr_pipe == &Pipe::Start { break }
+            curr_direction = get_next_direction(&curr_direction, curr_pipe);
+        }
+        if count > 0 {
+            break
+        }
+        pipe_map.clear()
+    }
+
+    todo!()
 }
 
 #[cfg(test)]
