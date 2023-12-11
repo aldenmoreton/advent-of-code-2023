@@ -64,3 +64,4 @@ mod day8;
 mod day9;
 /// [Pipe Maze](https://adventofcode.com/2023/day/10)
 mod day10;
+mod day11;
