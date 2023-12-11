@@ -63,7 +63,13 @@ mod day8;
 /// using the fold method on iterators.
 mod day9;
 /// [Pipe Maze](https://adventofcode.com/2023/day/10)
-mod day10;
+/// ## Summary
+/// Hard puzzle concerned with following directions through grid.
+/// ## Reflection
+/// I should have split more of this puzzle into traits and functions.
+/// Programming is a struggle between monolithic blocks and fragmented
+/// little structures. I definitely fell too far on the former this day.
+mod day10; //TODO: Refactor and pass tests (improve cases around 'S' in part 2)
 /// [Cosmic Expansion](https://adventofcode.com/2023/day/11)
 /// ## Summary
 /// Easy problem concerned with finding the number of times a
