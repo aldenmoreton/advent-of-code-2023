@@ -64,4 +64,8 @@ mod day8;
 mod day9;
 /// [Pipe Maze](https://adventofcode.com/2023/day/10)
 mod day10;
+/// [Cosmic Expansion](https://adventofcode.com/2023/day/11)
+/// ## Summary
+/// Easy problem concerned with finding the number of times a
+/// Manhattan distance crossed over certain boundaries.
 mod day11;

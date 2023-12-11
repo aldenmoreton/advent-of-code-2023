@@ -1,5 +1,6 @@
+use std::fmt::Debug;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum Pipe {
     Vertical,
     Horizontal,
@@ -11,23 +12,28 @@ enum Pipe {
     Start
 }
 
-#[derive(Clone)]
+impl Debug for Pipe {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Pipe::Vertical => write!(f, "|"),
+            Pipe::Horizontal => write!(f, "-"),
+            Pipe::UpRight => write!(f, "L"),
+            Pipe::UpLeft => write!(f, "J"),
+            Pipe::DownLeft => write!(f, "7"),
+            Pipe::DownRight => write!(f, "F"),
+            Pipe::Ground => write!(f, "."),
+            Pipe::Start => write!(f, "S")
+        }
+    }
+}
+
+#[derive(Clone, PartialEq)]
 enum Direction {
     Up,
     Down,
     Left,
     Right
 }
-
-// | is a vertical pipe connecting north and south.
-// - is a horizontal pipe connecting east and west.
-// L is a 90-degree bend connecting north and east.
-// J is a 90-degree bend connecting north and west.
-// 7 is a 90-degree bend connecting south and west.
-// F is a 90-degree bend connecting south and east.
-// . is ground; there is no pipe in this tile.
-// S is the starting position of the animal
-
 
 #[aoc_generator(day10)]
 fn input_generator(input: &str) -> ((usize, usize), Vec<Vec<Pipe>>) {
@@ -57,13 +63,6 @@ fn input_generator(input: &str) -> ((usize, usize), Vec<Vec<Pipe>>) {
         .collect();
     (start, map)
 }
-
-// const DIRECTIONS: [(i32, i32); 4] = [
-//     (-1, -1),
-//     (-1,  1),
-//     ( 1, -1),
-//     ( 1,  1)
-// ];
 
 fn get_next_options(curr_direction: &Direction) -> Vec<Pipe> {
     let mut next_options = vec![Pipe::Start];
@@ -201,9 +200,19 @@ fn part_two((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
     ];
 
     let mut pipe_map = (0..x_len)
-        .map(|_| Vec::<Pipe>::with_capacity(y_len))
+        .map(|_| (0..y_len)
+            .map(|_| Pipe::Ground)
+            .collect::<Vec<_>>()
+        )
         .collect::<Vec<_>>();
     for mut curr_direction in cardnal_directions {
+        pipe_map
+            .iter_mut()
+            .for_each(|row| {
+                row
+                    .iter_mut()
+                    .for_each(|column| { *column = Pipe::Ground });
+            });
         let (mut curr_x, mut curr_y) = start.clone();
         let mut count = 0;
         loop {
@@ -220,16 +229,101 @@ fn part_two((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
                 break
             }
             count += 1;
-            if curr_pipe == &Pipe::Start { break }
+            pipe_map[curr_x][curr_y] = curr_pipe.clone();
+            if curr_pipe == &Pipe::Start {
+                let next_dir = if curr_x > 0 && pipe_map[curr_x - 1][curr_y] != Pipe::Ground && curr_direction != Direction::Down {
+                    Direction::Up
+                } else if curr_y > 0 && pipe_map[curr_x][curr_y - 1] != Pipe::Ground && curr_direction != Direction::Right {
+                    Direction::Left
+                } else if curr_x < x_len && pipe_map[curr_x + 1][curr_y] != Pipe::Ground && curr_direction != Direction::Up {
+                    Direction::Down
+                } else {
+                    Direction::Right
+                };
+                pipe_map[curr_x][curr_y] = match (curr_direction, next_dir) {
+                    (Direction::Left, Direction::Right) | (Direction::Right, Direction::Left) => Pipe::Horizontal,
+                    (Direction::Up, Direction::Down) | (Direction::Down, Direction::Up) => Pipe::Vertical,
+                    (Direction::Up, Direction::Left) | (Direction::Left, Direction::Up) => Pipe::UpRight,
+                    (Direction::Up, Direction::Right) | (Direction::Right, Direction::Up) => Pipe::UpLeft,
+                    (Direction::Down, Direction::Left) | (Direction::Left, Direction::Down) => Pipe::DownRight,
+                    (Direction::Down, Direction::Right) | (Direction::Right, Direction::Down) => Pipe::DownLeft,
+                    _ => panic!("Start position should not be this")
+                };
+                break
+            }
             curr_direction = get_next_direction(&curr_direction, curr_pipe);
         }
         if count > 0 {
             break
         }
-        pipe_map.clear()
+    }
+    pipe_map
+        .iter()
+        .for_each(|row| println!("{row:?}"));
+
+    let next_options = get_next_options(&Direction::Up);
+    let mut area = 0;
+    for (i, row) in pipe_map.iter().enumerate() {
+        for (j, pipe) in row.iter().enumerate() {
+            let mut hit_count = 0;
+            let (mut curr_i, mut curr_j) = (i.clone(), j.clone());
+            let mut curr_pipe = &pipe.clone();
+            if *curr_pipe != Pipe::Ground {
+                continue
+            }
+            'outer: loop {
+                if *curr_pipe != Pipe::Ground {
+                    if *curr_pipe == Pipe::Horizontal {
+                        hit_count += 1
+                    } else {
+                        let enter_pipe = (*curr_pipe).clone();
+                        (curr_i, curr_j) = if let Some((x, y)) = get_next_index(&Direction::Up, curr_i, curr_j, x_len, y_len) {
+                            (x, y)
+                        } else {
+                            break 'outer
+                        };
+                        curr_pipe = &pipe_map[curr_i][curr_j];
+                        while *curr_pipe == Pipe::Vertical {
+                            (curr_i, curr_j) = if let Some((x, y)) = get_next_index(&Direction::Up, curr_i, curr_j, x_len, y_len) {
+                                (x, y)
+                            } else {
+                                break 'outer
+                            };
+                            curr_pipe = &pipe_map[curr_i][curr_j];
+                            if !next_options.contains(curr_pipe) && *curr_pipe != Pipe::Ground {
+                                hit_count += 1
+                            }
+                        }
+                        hit_count += match enter_pipe {
+                            Pipe::UpRight => match curr_pipe {
+                                Pipe::DownLeft => 1,
+                                Pipe::DownRight => 2,
+                                _ => panic!("You shouldn't be able to hit this pipe")
+                            },
+                            Pipe::UpLeft => match curr_pipe {
+                                Pipe::DownLeft => 2,
+                                Pipe::DownRight => 1,
+                                _ => panic!("You shouldn't be able to hit this pipe")
+                            },
+                            _ => panic!("You shouldn't be able to hit this pipe")
+                        };
+                    }
+                }
+
+                (curr_i, curr_j) = if let Some((x, y)) = get_next_index(&Direction::Up, curr_i, curr_j, x_len, y_len) {
+                    (x, y)
+                } else {
+                    break
+                };
+                curr_pipe = &pipe_map[curr_i][curr_j];
+            }
+            if hit_count % 2 == 1 {
+                area += 1
+            }
+        }
     }
 
-    todo!()
+    area
 }
 
 #[cfg(test)]
@@ -262,5 +356,58 @@ mod tests {
         "};
         let result = part_one(&input_generator(input));
         assert_eq!(result, 8);
+    }
+
+    #[test]
+    fn part2_1() {
+        let input = indoc! {"
+            ...........
+            .S-------7.
+            .|F-----7|.
+            .||.....||.
+            .||.....||.
+            .|L-7.F-J|.
+            .|..|.|..|.
+            .L--J.L--J.
+            ...........
+        "};
+        let result = part_two(&input_generator(input));
+        assert_eq!(result, 4)
+    }
+
+    #[test]
+    fn part2_2() {
+        let input = indoc! {"
+            .F----7F7F7F7F-7....
+            .|F--7||||||||FJ....
+            .||.FJ||||||||L7....
+            FJL7L7LJLJ||LJ.L-7..
+            L--J.L7...LJS7F-7L7.
+            ....F-J..F7FJ|L7L7L7
+            ....L7.F7||L7|.L7L7|
+            .....|FJLJ|FJ|F7|.LJ
+            ....FJL-7.||.||||...
+            ....L---J.LJ.LJLJ...
+        "};
+        let result = part_two(&input_generator(input));
+        assert_eq!(result, 8)
+    }
+
+    #[test]
+    fn part2_3() {
+        let input = indoc! {"
+            FF7FSF7F7F7F7F7F---7
+            L|LJ||||||||||||F--J
+            FL-7LJLJ||||||LJL-77
+            F--JF--7||LJLJ7F7FJ-
+            L---JF-JLJ.||-FJLJJ7
+            |F|F-JF---7F7-L7L|7|
+            |FFJF7L7F-JF7|JL---7
+            7-L-JL7||F7|L7F-7F7|
+            L.L7LFJ|||||FJL7||LJ
+            L7JLJL-JLJLJL--JLJ.L
+        "};
+        let result = part_two(&input_generator(input));
+        assert_eq!(result, 10)
     }
 }
