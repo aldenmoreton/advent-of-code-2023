@@ -77,7 +77,7 @@ pub fn handle(day: u8) {
         .open(mod_path)
         .expect("Couldn't open solutions module file");
 
-    let mod_string = format!{"mod day{day};\n"};
+    let mod_string = format!{"pub mod day{day};\n"};
     mod_file
         .write(mod_string.as_bytes())
         .expect("Could not write to mod file");

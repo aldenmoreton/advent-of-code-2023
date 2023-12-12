@@ -4,6 +4,6 @@ extern crate aoc_runner;
 extern crate aoc_runner_derive;
 extern crate crypto;
 
-mod solutions;
+pub mod solutions;
 
 aoc_lib!{ year = 2023 }
