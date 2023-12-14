@@ -89,3 +89,5 @@ pub mod day10; //TODO: Refactor and pass tests (improve cases around 'S' in part
 /// manhattan distance crossed over certain boundaries.
 pub mod day11;
 pub mod day12;
+pub mod day13;
+pub mod day14;
