@@ -111,7 +111,7 @@ fn input_generator_two(input: &str) -> Vec<(Vec<Status>, Vec<usize>)> {
         .lines()
         .map(|line| {
             let (characters, groups) = line.split_once(' ').unwrap();
-
+            let characters = (0..5).map(|_| characters).join("?");
 
             let groups: Vec<_> = groups
                 .split(',')
@@ -128,11 +128,6 @@ fn input_generator_two(input: &str) -> Vec<(Vec<Status>, Vec<usize>)> {
                         _ => panic!("Should not have this character in input")
                     }
                 )
-                .collect();
-
-            let sequence = repeat_n(sequence, 5)
-                .intersperse(vec![Status::Unknown])
-                .flatten()
                 .collect();
 
             let groups = repeat_n(groups, 5)
@@ -177,7 +172,6 @@ fn possible_ways(cache: &mut HashMap<(usize, usize, usize), usize>, s: &[Status]
       (Status::Unknown, None) =>
         possible_ways(cache, &s[1..], Some(1), remaining) +
         possible_ways(cache, &s[1..], None, remaining),
-      _ => unreachable!(),
     };
     cache.insert(key, ways);
     ways
