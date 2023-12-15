@@ -94,34 +94,18 @@ fn get_next_options(curr_direction: &Direction) -> Vec<Pipe> {
 fn get_next_index(curr_direction: &Direction, curr_x: usize, curr_y: usize, x_len: usize, y_len: usize) -> Option<(usize, usize)> {
     match curr_direction {
         Direction::Up => {
-            if curr_x > 0 {
-                Some((curr_x - 1, curr_y))
-            } else {
-                None
-            }
+            (curr_x > 0).then_some((curr_x - 1, curr_y))
         },
         Direction::Left => {
-            if curr_y > 0 {
-                Some((curr_x, curr_y - 1))
-            } else {
-                None
-            }
+            (curr_y > 0).then_some((curr_x, curr_y - 1))
         },
         Direction::Down => {
             let next_x = curr_x + 1;
-            if next_x < x_len {
-                Some((next_x, curr_y))
-            } else {
-                None
-            }
+            (next_x < x_len).then_some((next_x, curr_y))
         },
         Direction::Right => {
             let next_y = curr_y + 1;
-            if next_y < y_len {
-                Some((curr_x, next_y))
-            } else {
-                None
-            }
+            (next_y < y_len).then_some((curr_x, next_y))
         }
     }
 }
@@ -163,7 +147,7 @@ fn part_one((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
         Direction::Left,
     ];
     for mut curr_direction in cardnal_directions {
-        let (mut curr_x, mut curr_y) = start.clone();
+        let (mut curr_x, mut curr_y) = start;
         let mut count = 0;
         loop {
             (curr_x, curr_y) = if let Some((x, y)) = get_next_index(&curr_direction, curr_x, curr_y, x_len, y_len) {
@@ -174,7 +158,7 @@ fn part_one((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
             };
             let next_options = get_next_options(&curr_direction);
             let curr_pipe = &map[curr_x][curr_y];
-            if !next_options.contains(&curr_pipe) {
+            if !next_options.contains(curr_pipe) {
                 count = 0;
                 break
             }
@@ -213,7 +197,7 @@ fn part_two((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
                     .iter_mut()
                     .for_each(|column| { *column = Pipe::Ground });
             });
-        let (mut curr_x, mut curr_y) = start.clone();
+        let (mut curr_x, mut curr_y) = start;
         let mut count = 0;
         loop {
             (curr_x, curr_y) = if let Some((x, y)) = get_next_index(&curr_direction, curr_x, curr_y, x_len, y_len) {
@@ -224,7 +208,7 @@ fn part_two((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
             };
             let next_options = get_next_options(&curr_direction);
             let curr_pipe = &map[curr_x][curr_y];
-            if !next_options.contains(&curr_pipe) {
+            if !next_options.contains(curr_pipe) {
                 count = 0;
                 break
             }
@@ -266,7 +250,7 @@ fn part_two((start, map): &((usize, usize), Vec<Vec<Pipe>>)) -> i32 {
     for (i, row) in pipe_map.iter().enumerate() {
         for (j, pipe) in row.iter().enumerate() {
             let mut hit_count = 0;
-            let (mut curr_i, mut curr_j) = (i.clone(), j.clone());
+            let (mut curr_i, mut curr_j) = (i, j);
             let mut curr_pipe = &pipe.clone();
             if *curr_pipe != Pipe::Ground {
                 continue

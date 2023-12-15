@@ -9,7 +9,7 @@ fn part_one(input: &str) -> u32 {
         for (j, curr_char) in line.chars().enumerate() {
             match curr_char {
                 '.' => {
-                    if new_number.len() > 0 {
+                    if !new_number.is_empty() {
                         let number_string: String = new_number.iter().collect();
                         let first_index = j - number_string.len();
                         potential_parts.push((number_string, (i, (first_index, j - 1))));
@@ -27,7 +27,7 @@ fn part_one(input: &str) -> u32 {
                 },
                 _ => {
                     symbols.insert((i, j));
-                    if new_number.len() > 0 {
+                    if !new_number.is_empty() {
                         let number_string: String = new_number.iter().collect();
                         let first_index = j - number_string.len();
                         potential_parts.push((number_string, (i, (first_index, j - 1))));
@@ -75,7 +75,7 @@ fn part_two(input: &str) -> u32 {
             match curr_char {
                 '*' => {
                     stars.push((i, j));
-                    if new_number.len() > 0 {
+                    if !new_number.is_empty() {
                         let number_string: String = new_number.iter().collect();
                         let first_index = j - number_string.len();
                         let last_index = j - 1;
@@ -98,7 +98,7 @@ fn part_two(input: &str) -> u32 {
                     }
                 },
                 _ => {
-                    if new_number.len() > 0 {
+                    if !new_number.is_empty() {
                         let number_string: String = new_number.iter().collect();
                         let first_index = j - number_string.len();
                         let last_index = j - 1;

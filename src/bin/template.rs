@@ -45,7 +45,7 @@ fn safe_create_file(path: &str) -> Result<File, std::io::Error> {
 }
 
 pub fn handle(day: u8) {
-    let mod_path = format!{"src/solutions/mod.rs"};
+    let mod_path = "src/solutions/mod.rs".to_string();
     let solution_path = format!("src/solutions/day{day}.rs");
     let input_path = format!("input/2015/day{day}.txt");
 
@@ -79,7 +79,7 @@ pub fn handle(day: u8) {
 
     let mod_string = format!{"pub mod day{day};\n"};
     mod_file
-        .write(mod_string.as_bytes())
+        .write_all(mod_string.as_bytes())
         .expect("Could not write to mod file");
 
     match safe_create_file(&input_path) {

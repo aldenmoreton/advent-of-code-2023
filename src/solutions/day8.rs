@@ -15,7 +15,7 @@ fn input_generator(input: &str) -> (String, HashMap<String, (String, String)>) {
     lines.next();
 
     let mut mappings = HashMap::new();
-    while let Some(line) = lines.next() {
+    for line in lines {
         let (key, values) = line.split_once(" = ").unwrap();
         let (left, right) = values.split_once(", ").unwrap();
         mappings.insert(
@@ -83,15 +83,15 @@ fn part_two(
                         unreachable!()
                     };
                     if !next_location.ends_with('Z') {
-                        FoldWhile::Continue((&next_location, count + 1))
+                        FoldWhile::Continue((next_location, count + 1))
                     } else {
-                        FoldWhile::Done((&next_location, count + 1))
+                        FoldWhile::Done((next_location, count + 1))
                     }
                 })
                 .into_inner()
                 .1
         })
-        .reduce(|| 1u64, |a, b| lcm(a, b))
+        .reduce(|| 1u64, lcm)
 }
 
 #[cfg(test)]

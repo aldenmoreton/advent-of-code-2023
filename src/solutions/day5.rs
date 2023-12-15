@@ -3,8 +3,12 @@ use itertools::Itertools;
 
 use rayon::prelude::*;
 
+type IDs = Vec<u64>;
+type Mapping = ((u64, u64), u64);
+type Mappings = Vec<Vec<Mapping>>;
+
 #[aoc_generator(day5)]
-fn input_generator(input: &str) -> (Vec<u64>, Vec<Vec<((u64, u64), u64)>>) {
+fn input_generator(input: &str) -> (IDs, Mappings) {
     let mut lines = input.lines().peekable();
 
     let (_, seeds) = lines.next().unwrap().split_once(": ").unwrap();
@@ -18,7 +22,7 @@ fn input_generator(input: &str) -> (Vec<u64>, Vec<Vec<((u64, u64), u64)>>) {
     let mut value_mappings: Vec<Vec<((u64, u64), u64)>> = Vec::new();
     let mut curr_map = Vec::new();
     while let Some(line) = lines.next() {
-        if line == "" || lines.peek().is_none() {
+        if line.is_empty() || lines.peek().is_none() {
             lines.next();
             value_mappings.push(curr_map.clone());
             curr_map.clear();
@@ -40,7 +44,7 @@ fn input_generator(input: &str) -> (Vec<u64>, Vec<Vec<((u64, u64), u64)>>) {
 
 
 #[aoc(day5, part1)]
-fn part_one(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
+fn part_one(input: &(IDs, Mappings)) -> u64 {
     let mut ids = input.0.clone();
     let mappings = &input.1;
 
@@ -67,7 +71,7 @@ fn part_one(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
 
 
 #[aoc(day5, part1, Rayon)]
-fn part_one_rayon(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
+fn part_one_rayon(input: &(IDs, Mappings)) -> u64 {
     let ids = input.0.clone();
     let mappings = &input.1;
 
@@ -89,149 +93,133 @@ fn part_one_rayon(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
         .unwrap()
 }
 
-#[aoc(day5, part2)]
-fn part_two(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
-    let id_ranges: Vec<(u64, u64)> = input.0
-        .clone()
-        .into_iter()
-        .tuples()
-        .collect();
-    let mappings = &input.1;
-
-    id_ranges
-        .into_par_iter()
-        .map(|(min_id_range, range_len)| {
-            (min_id_range..min_id_range+range_len)
-                .into_par_iter()
-                .map(|mut id| {
-                    for mapping in mappings.iter() {
-                        for ((value_start, key_start), map_len) in mapping {
-                            if *key_start <= id && id < key_start + map_len {
-                                let key_offset = id - key_start;
-                                id = value_start + key_offset;
-                                break
-                            }
-                        }
-                    }
-                    id
-                })
-                .min()
-                .unwrap()
-        })
-        .min()
-        .unwrap()
-}
-
+type NextRange = Option<(u64, u64)>;
+type Leftover = Option<(u64, u64)>;
 fn split_ranges(
     (curr_start, curr_len): (u64, u64),
-    ((value_start, key_start), mapping_len): ((u64, u64), u64)
-) -> (Option<(u64, u64)>, Option<(u64, u64)>, Option<(u64, u64)>) {
+    ((value_start, key_start), mapping_len): Mapping
+) -> (NextRange, Leftover, Leftover) {
     let curr_end = curr_start + curr_len - 1;
     let key_end = key_start + mapping_len - 1;
-    if curr_start < key_start {
-        if curr_end < key_end {
-            if curr_end < key_start {
-                // println!("No overlap");
-                (None, Some((curr_start, curr_len)), None)
-            } else {
-                // Case 1
-                // println!("Case 1: {}-{}", curr_start, curr_end);
-                let left_len = key_start - curr_start;
-                (
-                    Some((value_start, 1 + curr_end - key_start)),
-                    Some((curr_start, left_len)),
-                    None
-                )
+    match curr_start.cmp(&key_start) {
+        std::cmp::Ordering::Less => {
+            match curr_end.cmp(&key_end) {
+                std::cmp::Ordering::Less => {
+                    if curr_end < key_start {
+                        // println!("No overlap");
+                        (None, Some((curr_start, curr_len)), None)
+                    } else {
+                        // Case 1
+                        // println!("Case 1: {}-{}", curr_start, curr_end);
+                        let left_len = key_start - curr_start;
+                        (
+                            Some((value_start, 1 + curr_end - key_start)),
+                            Some((curr_start, left_len)),
+                            None
+                        )
+                    }
+                },
+                std::cmp::Ordering::Greater => {
+                    // Case 2
+                    // println!("Case 2: {}-{}", curr_start, curr_end);
+                    let left_len = key_start - curr_start;
+                    let right_len = curr_end - key_end;
+                    (
+                        Some((value_start, mapping_len)),
+                        Some((curr_start, left_len)),
+                        Some((key_end+1, right_len))
+                    )
+                },
+                std::cmp::Ordering::Equal => {
+                    // Case 3
+                    // println!("Case 3: {}-{}", curr_start, curr_end);
+                    let left_len = key_start - curr_start;
+                    (
+                        Some((value_start, mapping_len)),
+                        Some((curr_start, left_len)),
+                        None
+                    )
+                }
             }
-        } else if curr_end > key_end {
-            // Case 2
-            // println!("Case 2: {}-{}", curr_start, curr_end);
-            let left_len = key_start - curr_start;
-            let right_len = curr_end - key_end;
-            (
-                Some((value_start, mapping_len)),
-                Some((curr_start, left_len)),
-                Some((key_end+1, right_len))
-            )
-        } else {
-            // Case 3
-            // println!("Case 3: {}-{}", curr_start, curr_end);
-            let left_len = key_start - curr_start;
-            (
-                Some((value_start, mapping_len)),
-                Some((curr_start, left_len)),
-                None
-            )
-        }
-    } else if curr_start > key_start {
-        if curr_end < key_end {
-            // Case 4
-            // println!("Case 4: {}-{}", curr_start, curr_end);
-            (
-                Some((value_start + (curr_start - key_start), curr_len)),
-                None,
-                None
-            )
-        } else if curr_end > key_end {
-            if curr_start > key_end {
-                // println!("No overlap");
-                return (None, Some((curr_start, curr_len)), None)
+        },
+        std::cmp::Ordering::Greater => {
+            match curr_end.cmp(&key_end) {
+                std::cmp::Ordering::Less => {
+                    // Case 4
+                    // println!("Case 4: {}-{}", curr_start, curr_end);
+                    (
+                        Some((value_start + (curr_start - key_start), curr_len)),
+                        None,
+                        None
+                    )
+                },
+                std::cmp::Ordering::Greater => {
+                    if curr_start > key_end {
+                        // println!("No overlap");
+                        return (None, Some((curr_start, curr_len)), None)
+                    }
+                    // Case 5
+                    // println!("Case 5: {}-{}", curr_start, curr_end);
+                    let right_len = curr_end - key_end;
+                    (
+                        Some((value_start + (curr_start - key_start), curr_len - right_len)),
+                        Some((key_end + 1, right_len)),
+                        None
+                    )
+                },
+                std::cmp::Ordering::Equal => {
+                    // Case 6
+                    // println!("Case 6: {}-{}", curr_start, curr_end);
+                    (
+                        Some((value_start + (curr_start - key_start), curr_len)),
+                        None,
+                        None
+                    )
+                }
             }
-            // Case 5
-            // println!("Case 5: {}-{}", curr_start, curr_end);
-            let right_len = curr_end - key_end;
-            (
-                Some((value_start + (curr_start - key_start), curr_len - right_len)),
-                Some((key_end + 1, right_len)),
-                None
-            )
-        } else {
-            // Case 6
-            // println!("Case 6: {}-{}", curr_start, curr_end);
-            (
-                Some((value_start + (curr_start - key_start), curr_len)),
-                None,
-                None
-            )
-        }
-    } else {
-        if curr_end < key_end {
-            // Case 7
-            // println!("Case 7: {}-{}", curr_start, curr_end);
-            (
-                Some((value_start, curr_len)),
-                None,
-                None
-            )
-        } else if curr_end > key_end {
-            // Case 8
-            // println!("Case 8: {}-{}", curr_start, curr_end);
-            let right_len = curr_end - key_end;
-            (
-                Some((value_start, curr_len - right_len)),
-                Some((key_end + 1, right_len)),
-                None
-            )
-        } else {
-            // Case 9
-            // println!("Case 9: {}-{}", curr_start, curr_end);
-            (
-                Some((value_start, mapping_len)),
-                None,
-                None
-            )
+        },
+        std::cmp::Ordering::Equal => {
+            match curr_end.cmp(&key_end) {
+                std::cmp::Ordering::Less => {
+                    // Case 7
+                    // println!("Case 7: {}-{}", curr_start, curr_end);
+                    (
+                        Some((value_start, curr_len)),
+                        None,
+                        None
+                    )
+                },
+                std::cmp::Ordering::Greater => {
+                    // Case 8
+                    // println!("Case 8: {}-{}", curr_start, curr_end);
+                    let right_len = curr_end - key_end;
+                    (
+                        Some((value_start, curr_len - right_len)),
+                        Some((key_end + 1, right_len)),
+                        None
+                    )
+                },
+                std::cmp::Ordering::Equal => {
+                    // Case 9
+                    // println!("Case 9: {}-{}", curr_start, curr_end);
+                    (
+                        Some((value_start, mapping_len)),
+                        None,
+                        None
+                    )
+                }
+            }
         }
     }
 }
 
-#[aoc(day5, part2, Optimized)]
-fn part_two_optimized(input: &(Vec<u64>, Vec<Vec<((u64, u64), u64)>>)) -> u64 {
-    let id_ranges: Vec<(u64, u64)> = input.0
+#[aoc(day5, part2)]
+fn part_two_optimized((ids, mappings): &(IDs, Mappings)) -> u64 {
+    let id_ranges: Vec<(u64, u64)> = ids
         .clone()
         .into_iter()
         .tuples()
         .collect();
-    let mappings = &input.1;
 
     let mut total_min = u64::MAX;
     for id_range in id_ranges {

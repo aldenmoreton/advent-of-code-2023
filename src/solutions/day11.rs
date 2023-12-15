@@ -19,28 +19,23 @@ fn input_generator(input: &str) -> Vec<Vec<bool>> {
 
 #[aoc(day11, part1)]
 fn part_one(input: &[Vec<bool>]) -> usize {
-    let (row_len, col_len) = (input.len(), input[0].len());
+    let col_len = input[0].len();
     let empty_rows: Vec<usize> = input
         .iter()
         .enumerate()
         .filter_map(|(i, row)| {
-            let count: u8 = row
+            row
                 .iter()
-                .map(|element| *element as u8)
-                .sum();
-            if count == 0 {
-                Some(i)
-            } else {
-                None
-            }
+                .all(|galaxy| !*galaxy)
+                .then_some(i)
         })
         .collect();
 
     let mut empty_cols = Vec::new();
     for col in 0..col_len {
         let mut empty = true;
-        for row in 0..row_len {
-            if input[row][col] {
+        for row in input.iter() {
+            if row[col] {
                 empty = false;
                 break
             }
@@ -53,17 +48,15 @@ fn part_one(input: &[Vec<bool>]) -> usize {
     let galaxies: Vec<(usize, usize)> = input
         .iter()
         .enumerate()
-        .map(|(i, row)|
+        .flat_map(|(i, row)|
             row
                 .iter()
                 .enumerate()
-                .filter_map(|(j, galexy)| {
-                    if *galexy { Some((i, j)) }
-                    else { None }
-                })
+                .filter_map(|(j, galexy)|
+                    galexy.then_some((i, j))
+                )
                 .collect::<Vec<_>>()
         )
-        .flatten()
         .collect();
 
     let sum = galaxies
@@ -105,28 +98,23 @@ fn part_one(input: &[Vec<bool>]) -> usize {
 
 #[aoc(day11, part2)]
 fn part_two(input: &[Vec<bool>]) -> usize {
-    let (row_len, col_len) = (input.len(), input[0].len());
+    let col_len = input[0].len();
     let empty_rows: Vec<usize> = input
         .iter()
         .enumerate()
         .filter_map(|(i, row)| {
-            let count: u8 = row
+            row
                 .iter()
-                .map(|element| *element as u8)
-                .sum();
-            if count == 0 {
-                Some(i)
-            } else {
-                None
-            }
+                .all(|galaxy| !*galaxy)
+                .then_some(i)
         })
         .collect();
 
     let mut empty_cols = Vec::new();
     for col in 0..col_len {
         let mut empty = true;
-        for row in 0..row_len {
-            if input[row][col] {
+        for row in input.iter() {
+            if row[col] {
                 empty = false;
                 break
             }
@@ -139,17 +127,15 @@ fn part_two(input: &[Vec<bool>]) -> usize {
     let galaxies: Vec<(usize, usize)> = input
         .iter()
         .enumerate()
-        .map(|(i, row)|
+        .flat_map(|(i, row)|
             row
                 .iter()
                 .enumerate()
-                .filter_map(|(j, galexy)| {
-                    if *galexy { Some((i, j)) }
-                    else { None }
-                })
+                .filter_map(|(j, galexy)|
+                    galexy.then_some((i, j))
+                )
                 .collect::<Vec<_>>()
         )
-        .flatten()
         .collect();
 
     let sum = galaxies

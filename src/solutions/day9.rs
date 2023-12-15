@@ -15,7 +15,7 @@ fn input_generator(input: &str) -> Vec<Vec<i32>> {
 #[aoc(day9, part1)]
 fn part_one(input: &[Vec<i32>]) -> i32 {
     input
-        .into_iter()
+        .iter()
         .map(|history| {
             let mut derivatives = vec![history.to_owned()];
             while *derivatives.last().unwrap().last().unwrap() != 0 {
@@ -42,7 +42,7 @@ fn part_one(input: &[Vec<i32>]) -> i32 {
 #[aoc(day9, part2)]
 fn part_two(input: &[Vec<i32>]) -> i32 {
     input
-        .into_iter()
+        .iter()
         .map(|history| {
             let mut derivatives = vec![history.to_owned()];
             while *derivatives.last().unwrap().last().unwrap() != 0 {

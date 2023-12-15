@@ -96,7 +96,7 @@ fn input_generator_part_one(input: &str) -> Vec<Hand> {
 #[aoc(day7, part1)]
 fn part_one(input: &[Hand]) -> u32 {
     input
-        .into_iter()
+        .iter()
         .sorted_unstable()
         .enumerate()
         .fold(0, |value, (i, Hand { bid, .. })| {
@@ -193,7 +193,7 @@ fn input_generator_part_two(input: &str) -> Vec<Hand> {
 #[aoc(day7, part2)]
 fn part_two(input: &[Hand]) -> u32 {
     input
-        .into_iter()
+        .iter()
         .sorted_unstable()
         .enumerate()
         .fold(0, |value, (i, Hand { bid, .. })| {

@@ -66,10 +66,9 @@ fn part_two(input: &[Vec<Vec<GroundType>>]) -> usize {
 
 fn find_horizontal_line(grid: &[Vec<GroundType>], max_diffs: usize, skip_line: usize) -> usize {
     for r in 0..grid.len() - 1 {
-        if has_horizontal_symmetry(grid, max_diffs, r) {
-            if r + 1 != skip_line {
-                return r + 1;
-            }
+        if has_horizontal_symmetry(grid, max_diffs, r) &&
+            r + 1 != skip_line {
+            return r + 1;
         }
     }
 
@@ -104,10 +103,10 @@ fn has_horizontal_symmetry(grid: &[Vec<GroundType>], max_diffs: usize, line: usi
 
 fn find_vertical_line(grid: &[Vec<GroundType>], max_diffs: usize, skip_line: usize) -> usize {
     for c in 0..grid[0].len() - 1 {
-        if has_vertical_symmetry(grid, max_diffs, c) {
-            if c + 1 != skip_line {
-                return c + 1;
-            }
+        if
+            has_vertical_symmetry(grid, max_diffs, c) &&
+            c + 1 != skip_line {
+            return c + 1;
         }
     }
 
@@ -121,8 +120,8 @@ fn has_vertical_symmetry(grid: &[Vec<GroundType>], max_diffs: usize, line: usize
     let mut diffs = 0;
 
     loop {
-        for r in 0..grid.len() {
-            if grid[r][left] != grid[r][right] {
+        for row in grid.iter() {
+            if row[left] != row[right] {
                 diffs += 1;
 
                 if diffs > max_diffs {

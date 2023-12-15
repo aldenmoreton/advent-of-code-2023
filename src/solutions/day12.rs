@@ -46,15 +46,8 @@ fn validate_sequence(sequence: Vec<Status>, damage_groups: &Vec<usize>) -> bool 
         .group_by(|(_, status)| (*status).clone())
         .into_iter()
         .filter_map(|(key, grouping)|
-            if key == Status::Broken {
-                Some(
-                    grouping
-                        .collect_vec()
-                        .len()
-                )
-            } else {
-                None
-            }
+            (key == Status::Broken)
+                .then(|| grouping.collect_vec().len())
         )
         .collect_vec();
 
@@ -87,7 +80,7 @@ fn part_one(input: &[(Vec<Status>, Vec<usize>)]) -> usize {
                 .multi_cartesian_product()
                 .par_bridge()
                 .filter(|posible_statuses| {
-                    let mut posible_statuses = posible_statuses.into_iter();
+                    let mut posible_statuses = posible_statuses.iter();
 
                     let sequence: Vec<_> = sequence
                         .iter()
@@ -182,7 +175,7 @@ fn part_two(input: &[(Vec<Status>, Vec<usize>)]) -> usize {
     let mut cache =  HashMap::new();
 
     input
-        .into_iter()
+        .iter()
         .map(|(raw_sequence, damage_groups)| {
             let sum = possible_ways(&mut cache, raw_sequence, None, damage_groups);
             cache.clear();

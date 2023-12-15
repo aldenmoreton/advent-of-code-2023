@@ -58,7 +58,7 @@ fn quadradic_range(b: f64, c: f64) -> u64 {
 fn part_one(input: &[(f64, f64)]) -> u64 {
     let mut max_multiplied = 1;
     for (time, distance) in input {
-        let curr_range = quadradic_range(*time as f64, -(*distance as f64));
+        let curr_range = quadradic_range(*time, -1. * *distance);
         max_multiplied *= curr_range;
     }
     max_multiplied
@@ -77,8 +77,8 @@ fn part_two(input: &[(f64, f64)]) -> u64 {
         );
     let time: f64 = input.0.parse().unwrap();
     let distance: f64 = input.1.parse().unwrap();
-    let range = quadradic_range(time, -distance);
-    range
+
+    quadradic_range(time, -distance)
 }
 
 
