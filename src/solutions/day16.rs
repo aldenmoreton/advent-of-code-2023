@@ -187,35 +187,6 @@ fn move_tile(movement: Movement, grid: &Grid) -> MoveResult {
     }
 }
 
-#[aoc(day16, part1)]
-fn part_one(grid: &Grid) -> usize {
-    let mut tiles_visited: HashSet<(usize, usize)> = HashSet::new();
-    let mut dashes_done = HashSet::new();
-
-    let mut tile_paths = VecDeque::new();
-    tile_paths.push_back(Movement{x: 0, y: 0, direction: Direction::Right});
-    while let Some(mut curr_move) = tile_paths.pop_front() {
-        loop {
-            tiles_visited.insert((curr_move.x, curr_move.y));
-            if !dashes_done.insert((curr_move.x, curr_move.y, curr_move.direction.clone())) {
-                break
-            }
-
-            let next_action = move_tile(curr_move, grid);
-            curr_move = match next_action {
-                MoveResult::OutOfBounds => break,
-                MoveResult::NextMove(movement) => movement,
-                MoveResult::Split(curr_movement, next_movement) => {
-                    tile_paths.push_back(next_movement);
-                    curr_movement
-                }
-            };
-        }
-    }
-
-    tiles_visited.len()
-}
-
 fn check_path(starting_spot: Movement, grid: &Grid) -> usize {
     let mut tiles_visited: HashSet<(usize, usize)> = HashSet::new();
     let mut dashes_done = HashSet::new();
@@ -245,11 +216,16 @@ fn check_path(starting_spot: Movement, grid: &Grid) -> usize {
     tiles_visited.len()
 }
 
+#[aoc(day16, part1)]
+fn part_one(grid: &Grid) -> usize {
+    check_path(Movement { x: 0, y: 0, direction: Direction::Right }, grid)
+}
+
 #[aoc(day16, part2)]
 fn part_two(grid: &Grid) -> usize {
     let (len_x, len_y) = (grid.len(), grid[0].len());
 
-    let max_1 = (0..len_x)
+    let max_x = (0..len_x)
         .into_par_iter()
         .map(|i| {
             std::cmp::max(
@@ -264,7 +240,7 @@ fn part_two(grid: &Grid) -> usize {
         .max()
         .unwrap();
 
-    let max_2 = (0..len_y)
+    let max_y = (0..len_y)
         .into_par_iter()
         .map(|i| {
             std::cmp::max(
@@ -279,14 +255,13 @@ fn part_two(grid: &Grid) -> usize {
         .max()
         .unwrap();
 
-    std::cmp::max(max_1, max_2)
+    std::cmp::max(max_x, max_y)
 }
 
 #[cfg(test)]
 mod tests {
-    use indoc::indoc;
-
     use super::*;
+    use indoc::indoc;
 
     #[test]
     fn part1_1() {
