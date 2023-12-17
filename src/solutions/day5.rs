@@ -9,39 +9,37 @@ type Mappings = Vec<Vec<Mapping>>;
 
 #[aoc_generator(day5)]
 fn input_generator(input: &str) -> (IDs, Mappings) {
-    let mut lines = input.lines().peekable();
+    let mut sections = input.split("\n\n");
 
-    let (_, seeds) = lines.next().unwrap().split_once(": ").unwrap();
-    let source_values: Vec<u64> = seeds
-        .split_whitespace()
-        .map(|number| number.parse::<u64>().unwrap())
-        .collect();
+    let seeds = {
+        let (_, seeds) = sections.next().unwrap().split_once(": ").unwrap();
+        seeds
+            .split_whitespace()
+            .map(|number| number.parse::<u64>().unwrap())
+            .collect_vec()
+    };
 
-    lines.next(); lines.next();
-
-    let mut value_mappings: Vec<Vec<((u64, u64), u64)>> = Vec::new();
-    let mut curr_map = Vec::new();
-    while let Some(line) = lines.next() {
-        if line.is_empty() || lines.peek().is_none() {
-            lines.next();
-            value_mappings.push(curr_map.clone());
-            curr_map.clear();
-            continue
-        }
-        let mut amounts = line.split_whitespace();
-        curr_map
-            .push((
+    let value_mappings = sections
+        .map(|mapping|
+            mapping
+            .lines()
+            .skip(1)
+            .map(|line| {
+                let mut amounts = line.split_whitespace();
                 (
-                    amounts.next().unwrap().parse::<u64>().unwrap(),
+                    (
+                        amounts.next().unwrap().parse::<u64>().unwrap(),
+                        amounts.next().unwrap().parse::<u64>().unwrap()
+                    ),
                     amounts.next().unwrap().parse::<u64>().unwrap()
-                ),
-                amounts.next().unwrap().parse::<u64>().unwrap()
-            ))
-    }
+                )
+            })
+            .collect_vec()
+        )
+        .collect_vec();
 
-    (source_values, value_mappings)
+    (seeds, value_mappings)
 }
-
 
 #[aoc(day5, part1)]
 fn part_one(input: &(IDs, Mappings)) -> u64 {
