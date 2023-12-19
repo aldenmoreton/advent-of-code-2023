@@ -93,4 +93,8 @@ pub mod day13;
 pub mod day14;
 pub mod day15;
 pub mod day16;
+/// Dijkstra is stable, A* did not work; if the heuristic was too conservative
+/// the algorithm was correct, but slower, if the heuristic was too agressive
+/// the algorithm would be faster, but not the shortest path.
 pub mod day17;
+pub mod day18;
