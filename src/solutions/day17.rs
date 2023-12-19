@@ -1,7 +1,10 @@
 use itertools::Itertools;
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::{dijkstra, astar};
 
 type Grid = Vec<Vec<u32>>;
+type Coords = (usize, usize);
+type DirectionDuration = (u32, Direction);
+type State = (Coords, DirectionDuration);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 enum Direction {
@@ -75,11 +78,55 @@ fn next_pos(
     }
 }
 
-#[aoc(day17, part1)]
+#[aoc(day17, part1, Dijkstra)]
 fn part_one(grid: &Grid) -> u32 {
     let (x_len, y_len) = (grid.len(), grid[0].len());
 
-    let shortest_path: (Vec<((usize, usize), (u32, Direction))>, u32) = dijkstra(
+    let shortest_path: (Vec<State>, u32) = dijkstra(
+        &((0, 0), (0, Direction::Right)),
+        |((curr_x, curr_y), (prev_duration, prev_direction))| {
+            let complement = prev_direction.complement();
+            Direction::ALL_DIRECTIONS
+                .iter()
+                // Remove unavailable directions
+                .filter(|pos_direction| {
+                    if **pos_direction == complement {
+                        false
+                    } else if *prev_duration == 3 {
+                        *pos_direction != prev_direction
+                    } else {
+                        true
+                    }
+                })
+                // Convert directions to coords and validate bounds
+                .filter_map(|pos_direction|
+                    next_pos(pos_direction, (curr_x, curr_y), grid)
+                        .map(|coords| (coords, pos_direction))
+                )
+                // Add direction duration tracking
+                .map(|(pos_coords, pos_direction)| {
+                    if pos_direction == prev_direction {
+                        ((pos_coords, (prev_duration+1, prev_direction.clone())), grid[pos_coords.0][pos_coords.1])
+                    } else {
+                        ((pos_coords, (1, pos_direction.clone())), grid[pos_coords.0][pos_coords.1])
+                    }
+                })
+                .collect_vec()
+        },
+        |(position, _)| {
+            *position == (x_len-1, y_len-1)
+        }
+    )
+    .expect("Should have valid path");
+
+    shortest_path.1
+}
+
+#[aoc(day17, part1, Astar)]
+fn part_one_astar(grid: &Grid) -> u32 {
+    let (x_len, y_len) = (grid.len(), grid[0].len());
+
+    let shortest_path: (Vec<State>, u32) = astar(
         &((0, 0), (0, Direction::Right)),
         |((curr_x, curr_y), (prev_duration, prev_direction))| {
             let complement = prev_direction.complement();
@@ -107,6 +154,10 @@ fn part_one(grid: &Grid) -> u32 {
                 })
                 .collect_vec()
         },
+        |((curr_x, curr_y), _)| {
+            let (target_x, target_y) = (x_len-1, y_len-1);
+            ((target_x - curr_x) + (target_y - curr_y)) as u32
+        },
         |(position, _)| {
             *position == (x_len-1, y_len-1)
         }
@@ -116,11 +167,11 @@ fn part_one(grid: &Grid) -> u32 {
     shortest_path.1
 }
 
-#[aoc(day17, part2)]
+#[aoc(day17, part2, Dijkstra)]
 fn part_two(grid: &Grid) -> u32 {
     let (x_len, y_len) = (grid.len(), grid[0].len());
 
-    let shortest_path: (Vec<((usize, usize), (u32, Direction))>, u32) = dijkstra(
+    let shortest_path: (Vec<State>, u32) = dijkstra(
         &((0, 0), (0, Direction::Right)),
         |((curr_x, curr_y), (prev_duration, prev_direction))| {
             let complement = prev_direction.complement();
@@ -149,6 +200,53 @@ fn part_two(grid: &Grid) -> u32 {
                     }
                 })
                 .collect_vec()
+        },
+        |(position, (prev_duration, _))| {
+            *position == (x_len-1, y_len-1) && *prev_duration >= 4
+        }
+    )
+    .expect("Should have valid path");
+
+    shortest_path.1
+}
+
+#[aoc(day17, part2, Astar)]
+fn part_two_astar(grid: &Grid) -> u32 {
+    let (x_len, y_len) = (grid.len(), grid[0].len());
+
+    let shortest_path: (Vec<State>, u32) = astar(
+        &((0, 0), (0, Direction::Right)),
+        |((curr_x, curr_y), (prev_duration, prev_direction))| {
+            let complement = prev_direction.complement();
+            Direction::ALL_DIRECTIONS
+                .iter()
+                .filter(|pos_direction| {
+                    if **pos_direction == complement {
+                        false
+                    } else if *prev_duration < 4 {
+                        *pos_direction == prev_direction
+                    } else if *prev_duration == 10 {
+                        *pos_direction != prev_direction
+                    } else {
+                        true
+                    }
+                })
+                .filter_map(|pos_direction|
+                    next_pos(pos_direction, (curr_x, curr_y), grid)
+                        .map(|coords| (coords, pos_direction))
+                )
+                .map(|(pos_coords, pos_direction)| {
+                    if pos_direction == prev_direction {
+                        ((pos_coords, (prev_duration+1, prev_direction.clone())), grid[pos_coords.0][pos_coords.1])
+                    } else {
+                        ((pos_coords, (1, pos_direction.clone())), grid[pos_coords.0][pos_coords.1])
+                    }
+                })
+                .collect_vec()
+        },
+        |((curr_x, curr_y), _)| {
+            let (target_x, target_y) = (x_len-1, y_len-1);
+            ((target_x - curr_x) + (target_y - curr_y)) as u32
         },
         |(position, (prev_duration, _))| {
             *position == (x_len-1, y_len-1) && *prev_duration >= 4

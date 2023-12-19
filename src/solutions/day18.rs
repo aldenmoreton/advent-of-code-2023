@@ -44,12 +44,12 @@ fn part_one(input: &[(Direction, i32)]) -> usize {
     let mut map = HashSet::new();
 
     let mut curr_location = (0, 0);
-    map.insert(curr_location.clone());
+    map.insert(curr_location);
     for (direction, steps) in input {
         let adder = add_direction(direction);
         for _ in 0..*steps {
             curr_location = (curr_location.0+adder.0, curr_location.1+adder.1);
-            map.insert(curr_location.clone());
+            map.insert(curr_location);
 
 
             min_x = std::cmp::min(min_x, curr_location.0);
@@ -120,8 +120,8 @@ fn part_one(input: &[(Direction, i32)]) -> usize {
 
 #[aoc(day18, part1, Optimized)]
 fn part_one_optimized(input: &[(Direction, i32)]) -> i32 {
-    let foo = input
-        .into_iter()
+    let (result, _, _) = input
+        .iter()
         .fold((0, 0, 0), |(mut a, mut r, mut c), (direction, distance)| {
             let (rr, cc) = (r,c);
             match direction {
@@ -133,7 +133,7 @@ fn part_one_optimized(input: &[(Direction, i32)]) -> i32 {
             a += (c + cc) * (r - rr) + distance;
             (a, r, c)
         });
-    foo.0 / 2 + 1
+    result / 2 + 1
 }
 
 #[aoc_generator(day18, part2)]
@@ -141,8 +141,8 @@ fn input_generator_two(input: &str) -> Vec<(Direction, i64)> {
     input
         .lines()
         .map(|line| {
-            let parts = line.split_whitespace();
-            let full_hex = parts.skip(2).next().unwrap();
+            let mut parts = line.split_whitespace();
+            let full_hex = parts.nth(2).unwrap();
 
             let distance = i64::from_str_radix(&full_hex[2..7], 16).unwrap();
             let direction_num = i64::from_str_radix(&full_hex[7..8], 16).unwrap();
@@ -161,8 +161,8 @@ fn input_generator_two(input: &str) -> Vec<(Direction, i64)> {
 
 #[aoc(day18, part2)]
 fn part_two(input: &[(Direction, i64)]) -> i64 {
-    let foo = input
-        .into_iter()
+    let (result, _, _) = input
+        .iter()
         .fold((0, 0, 0), |(mut a, mut r, mut c), (direction, distance)| {
             let (rr, cc) = (r,c);
             match direction {
@@ -174,7 +174,7 @@ fn part_two(input: &[(Direction, i64)]) -> i64 {
             a += (c + cc) * (r - rr) + distance;
             (a, r, c)
         });
-    foo.0 / 2 + 1
+    result / 2 + 1
 }
 
 #[cfg(test)]
