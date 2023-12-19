@@ -98,3 +98,4 @@ pub mod day16;
 /// the algorithm would be faster, but not the shortest path.
 pub mod day17;
 pub mod day18;
+pub mod day19;
