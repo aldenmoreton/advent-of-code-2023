@@ -115,12 +115,22 @@ fn find_lcms(mut lcm_modules: Vec<&str>, mut module_map: ModuleMap) -> Vec<usize
     let mut lcms = Vec::new();
 
     let mut button_press_count = 0;
-    loop {
+    'button_pushes: loop {
         button_press_count += 1;
         let mut pulses = VecDeque::new();
         pulses.push_back(("button".to_string(), Pulse::Low, "broadcaster".to_string()));
 
         while let Some((from_module, curr_pulse, to_module)) = pulses.pop_front() {
+            lcm_modules.retain(|curr_module| {
+                if from_module == *curr_module && curr_pulse == Pulse::High {
+                    lcms.push(button_press_count);
+                    false
+                } else {
+                    true
+                }
+            });
+            if lcm_modules.len() == 0 { break 'button_pushes }
+
             let Some((curr_module, destinations)) = module_map.get_mut(&to_module) else {
                 continue
             };
@@ -147,7 +157,6 @@ fn find_lcms(mut lcm_modules: Vec<&str>, mut module_map: ModuleMap) -> Vec<usize
                     let prev_state = prev_states.get_mut(&from_module).unwrap();
                     *prev_state = curr_pulse;
 
-
                     let sending_pulse = if prev_states.values().all(|prev_pulse| *prev_pulse == Pulse::High) {
                         Pulse::Low
                     } else {
@@ -159,25 +168,6 @@ fn find_lcms(mut lcm_modules: Vec<&str>, mut module_map: ModuleMap) -> Vec<usize
                 }
             }
         }
-
-        // lcm_modules.retain(|module_name| {
-        //     let (module, _) = &module_map[*module_name];
-        //     match module {
-        //         Module::Conjunction(inputs) => {
-        //             if inputs.values().all(|prev_pulse| *prev_pulse == Pulse::High) {
-        //                 println!("Found LCM: {}", button_press_count);
-        //                 println!("{inputs:?}");
-        //                 lcms.push(button_press_count);
-        //                 false
-        //             } else {
-        //                 true
-        //             }
-        //         },
-        //         _ => panic!("This should be a conjunction")
-        //     }
-        // });
-
-        // if lcm_modules.len() == 0 { break }
     }
 
     lcms
@@ -186,8 +176,6 @@ fn find_lcms(mut lcm_modules: Vec<&str>, mut module_map: ModuleMap) -> Vec<usize
 #[aoc(day20, part2)]
 fn part_two(input: &str) -> usize {
     let module_map: ModuleMap = input_generator(input);
-
-    println!("{:?}", module_map.get("vf").unwrap());
 
     let lcm_modules = vec!["pm", "mk", "pk", "hf"];
     let lcms = find_lcms(lcm_modules, module_map);
@@ -226,12 +214,5 @@ mod tests {
         "};
         let result = part_one(input);
         assert_eq!(result, 11_687_500);
-    }
-
-    #[test]
-    fn part2_1() {
-        let input = "";
-        let result = part_two(input);
-        assert_eq!(result, 0);
     }
 }
