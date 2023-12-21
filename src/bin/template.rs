@@ -11,29 +11,30 @@ fn input_generator(input: &str) -> String {
 }
 
 #[aoc(day{}, part1)]
-fn part_one(input: &str) -> i32 {
+fn part_one(input: &str) -> usize {
     0
 }
 
 #[aoc(day{}, part2)]
-fn part_two(_input: &str) -> i32 {
+fn part_two(_input: &str) -> usize {
     0
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use indoc::indoc;
 
     #[test]
     fn part1_1() {
-        let input = "";
+        let input = indoc! {""};
         let result = part_one(&input_generator(input));
         assert_eq!(result, 0);
     }
 
     #[test]
     fn part2_1() {
-        let input = "";
+        let input = indoc! {""};
         let result = part_two(&input_generator(input));
         assert_eq!(result, 0);
     }

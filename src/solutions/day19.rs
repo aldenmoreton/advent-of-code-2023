@@ -94,9 +94,9 @@ fn input_generator(input: &str) -> (Workflows, Parts) {
 #[aoc(day19, part1)]
 fn part_one((workflows, parts): &(Workflows, Parts)) -> usize {
     parts
-        .into_iter()
+        .iter()
         .filter(|part| {
-            let mut curr_rule = workflows.get("in".into()).unwrap();
+            let mut curr_rule = workflows.get("in").unwrap();
             'rules: loop {
                 'rule: for rule in curr_rule {
                     match rule {
@@ -120,7 +120,7 @@ fn part_one((workflows, parts): &(Workflows, Parts)) -> usize {
                 }
             }
         })
-        .fold(0, |acc, part| acc + part.into_iter().sum::<usize>())
+        .fold(0, |acc, part| acc + part.iter().sum::<usize>())
 }
 
 fn find_ranges(rule: &str, mut ranges: [RangeInclusive<usize>; 4], workflows: &Workflows) -> Vec<[RangeInclusive<usize>; 4]> {
@@ -131,9 +131,9 @@ fn find_ranges(rule: &str, mut ranges: [RangeInclusive<usize>; 4], workflows: &W
         match operation {
             Operation::Branch(location) => {
                 match location {
-                    Location::Accept => valid_ranges.push(ranges.clone()),
+                    Location::Accept => valid_ranges.push(ranges),
                     Location::Reject => (),
-                    Location::Rule(new_rule) => valid_ranges.append(&mut find_ranges(new_rule, ranges.clone(), workflows))
+                    Location::Rule(new_rule) => valid_ranges.append(&mut find_ranges(new_rule, ranges, workflows))
                 }
                 return valid_ranges
             }
