@@ -4,10 +4,7 @@ use itertools::Itertools;
 fn part_one(input: &str) -> u32 {
     let mut total = 0;
     for line in input.lines() {
-        let numbers: Vec<_> = line
-            .chars()
-            .filter(|c| c.is_numeric())
-            .collect();
+        let numbers: Vec<_> = line.chars().filter(|c| c.is_numeric()).collect();
         let first = numbers.first().unwrap().to_digit(10).unwrap();
         let last = numbers.last().unwrap().to_digit(10).unwrap();
 
@@ -17,24 +14,8 @@ fn part_one(input: &str) -> u32 {
 }
 
 const NUMBERS: [&str; 18] = [
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9"
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "1", "2", "3", "4",
+    "5", "6", "7", "8", "9",
 ];
 
 #[aoc(day1, part2)]
@@ -61,7 +42,7 @@ fn part_two(input: &str) -> u32 {
             (_, "seven") => 7,
             (_, "eight") => 8,
             (_, "nine") => 9,
-            (_, num) => num.parse().unwrap()
+            (_, num) => num.parse().unwrap(),
         };
 
         let last = match sorted_indices.last().unwrap() {
@@ -74,7 +55,7 @@ fn part_two(input: &str) -> u32 {
             (_, "seven") => 7,
             (_, "eight") => 8,
             (_, "nine") => 9,
-            (_, num) => num.parse().unwrap()
+            (_, num) => num.parse().unwrap(),
         };
 
         total += first * 10 + last;
@@ -116,8 +97,7 @@ mod tests {
 
     #[test]
     fn part1_5() {
-        let input =
-"1abc2
+        let input = "1abc2
 pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet
@@ -177,8 +157,7 @@ treb7uchet
 
     #[test]
     fn part2_8() {
-        let input =
-"two1nine
+        let input = "two1nine
 eightwothree
 abcone2threexyz
 xtwone3four
@@ -192,22 +171,22 @@ zoneight234
 
     #[test]
     fn part2_9() {
-       let input = "asdfadasdf3";
-       let result = part_two(input);
-       assert_eq!(result, 33);
+        let input = "asdfadasdf3";
+        let result = part_two(input);
+        assert_eq!(result, 33);
     }
 
     #[test]
     fn part2_10() {
-       let input = "3asdfadasdf";
-       let result = part_two(input);
-       assert_eq!(result, 33);
+        let input = "3asdfadasdf";
+        let result = part_two(input);
+        assert_eq!(result, 33);
     }
 
     #[test]
     fn part2_11() {
-       let input = "eightwo";
-       let result = part_two(input);
-       assert_eq!(result, 82);
+        let input = "eightwo";
+        let result = part_two(input);
+        assert_eq!(result, 82);
     }
 }
